@@ -1,20 +1,63 @@
-# Configuração do Streamlit. Descomente e ajuste conforme o projeto avançar.
-# O tema pode ser trocado pelo menu ⋮ → Settings → Choose app theme.
+# Tema do CineInsights | TMDB Analytics
+# Claro e escuro disponíveis (menu ⋮ → Settings); por padrão segue o sistema de quem abre.
+# Identidade: azul-preto + destaque coral, inspirada em plataformas de streaming.
 
 [theme]
-paddingTop = "0.5rem"     # espaço abaixo da barra do topo (valor entre aspas)
-# font = "sans serif"     # "sans serif", "serif" ou "monospace"
+showWidgetBorder = true
+showSidebarBorder = true
+
+baseRadius = "12px"
+buttonRadius = "10px"
+
+# Tipografia: Inter no corpo, Outfit nos títulos
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+headingFont = "Outfit:https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700&display=swap"
+baseFontSize = 15
+headingFontSizes = ["44px", "26px", "20px", "17px", "15px", "13px"]
+headingFontWeights = [700, 600, 600, 600, 500, 500]
+metricValueFontSize = "1.9rem"
+metricValueFontWeight = 600
+linkUnderline = false
+
+paddingTop = "1.5rem"                 # espaço abaixo da barra do topo (valor entre aspas)
+paddingBottom = "3rem"
 
 [theme.light]
-primaryColor = "#ff4b4b"            # cor de destaque (widgets, links)
-backgroundColor = "#ffffff"         # fundo da página
-secondaryBackgroundColor = "#f0f2f6"  # fundo da sidebar e de widgets
-textColor = "#31333f"               # cor do texto
-borderColor = "#d5dae5"
+primaryColor = "#E5484D"              # coral um tom mais fechado para contrastar no fundo claro
+backgroundColor = "#F5F6FA"
+secondaryBackgroundColor = "#E8EBF3"
+textColor = "#0B1020"
+linkColor = "#C9363B"
+borderColor = "#D5DAE6"
+redColor = "#E5484D"
+blueColor = "#4F79C4"
+# Classes dos gráficos (validadas p/ daltonismo): Bem avaliado (coral), Mal avaliado (azul)
+chartCategoricalColors = ["#E5484D", "#4F79C4", "#8B93A7"]
+
+[theme.light.sidebar]
+backgroundColor = "#ECEEF5"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0B1020"
+borderColor = "#D5DAE6"
+primaryColor = "#E5484D"
+linkColor = "#C9363B"
 
 [theme.dark]
-primaryColor = "#ff4b4b"
-backgroundColor = "#0e1117"
-secondaryBackgroundColor = "#262730"
-textColor = "#fafafa"
-borderColor = "#41444e"
+primaryColor = "#FF5A5F"              # coral: widgets, toggles, sliders
+backgroundColor = "#0B1020"           # azul-preto da área principal
+secondaryBackgroundColor = "#131A2E"  # fundo dos widgets
+textColor = "#E9ECF5"
+linkColor = "#FF8A8D"
+borderColor = "#232C45"
+redColor = "#F2545B"
+blueColor = "#6A93DE"
+# Classes dos gráficos (validadas p/ daltonismo): Bem avaliado (coral), Mal avaliado (azul)
+chartCategoricalColors = ["#F2545B", "#6A93DE", "#9AA3B8"]
+
+[theme.dark.sidebar]
+backgroundColor = "#070A14"           # sidebar um tom mais escuro que a área principal
+secondaryBackgroundColor = "#131A2E"
+textColor = "#E9ECF5"
+borderColor = "#1A2238"
+primaryColor = "#FF5A5F"
+linkColor = "#FF8A8D"
