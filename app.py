@@ -1,5 +1,7 @@
 import math
 
+import altair as alt
+import pandas as pd
 import streamlit as st
 
 from src.data_loader import load_data
@@ -10,7 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Refinamentos pontuais: só classes geradas por key= (estáveis), sem classes internas do Streamlit
+# Refinamento pontual: só a classe gerada por key= (estável), sem classes internas do Streamlit
 st.html(
     """
     <style>
@@ -23,13 +25,6 @@ st.html(
         border-radius: 18px;
         padding: 1.75rem 2rem;
     }
-    [class*="st-key-placeholder"] {
-        background:
-            repeating-linear-gradient(135deg, rgba(120, 135, 175, 0.06) 0 12px, rgba(120, 135, 175, 0) 12px 24px),
-            linear-gradient(180deg, rgba(240, 84, 90, 0.06) 0%, rgba(240, 84, 90, 0) 100%);
-        border: 1px dashed rgba(240, 84, 90, 0.45);
-        border-radius: 14px;
-    }
     </style>
     """
 )
@@ -39,8 +34,19 @@ df = load_data()
 # Variáveis quantitativas do estudo (mesma lista VARS_QUANT do notebook de EDA)
 VARS_QUANT = ["budget", "revenue", "popularity", "runtime", "vote_average", "vote_count"]
 
-# budget e revenue chegam a bilhões: os sliders mostram em US$ milhões para ficarem legíveis
+# budget e revenue chegam a bilhões: sliders e gráficos mostram em US$ milhões para ficarem legíveis
 ESCALA = {"budget": 1_000_000, "revenue": 1_000_000}
+
+CLASSES = ["Bem avaliado", "Mal avaliado"]
+ORDEM_DECADAS = ["pre-1970", "1970s", "1980s", "1990s", "2000s", "2010s"]
+
+# Mesmas cores do .streamlit/config.toml, para os gráficos acompanharem o tema claro/escuro
+TEMA_ESCURO = st.context.theme.type == "dark"
+CORAL = "#F2545B" if TEMA_ESCURO else "#E5484D"  # Bem avaliado / destaque
+AZUL = "#6A93DE" if TEMA_ESCURO else "#4F79C4"  # Mal avaliado
+NEUTRO = "#1B2238" if TEMA_ESCURO else "#EEF0F6"  # centro da escala divergente (ρ = 0)
+TEXTO = "#E9ECF5" if TEMA_ESCURO else "#0B1020"
+CORES_CLASSE = alt.Scale(domain=CLASSES, range=[CORAL, AZUL])
 
 
 def limites_slider(serie):
@@ -55,10 +61,28 @@ def formatar_inteiro(n):
     return f"{n:,}".replace(",", ".")
 
 
-# Sidebar: filtros (variáveis + intervalo)
+def formatar_decimal(x, casas=1):
+    return f"{x:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def rotulo_variavel(var):
+    return f"{var} (US$ mi)" if var in ESCALA else var
+
+
+@st.cache_data(max_entries=50)
+def matriz_spearman(dados):
+    """Correlação de Spearman em formato longo (uma linha por par), pronta para o heatmap."""
+    # Pares com valor ausente (budget/revenue não informados, runtime faltando) são ignorados par a par
+    corr = dados.corr(method="spearman")
+    longo = corr.reset_index(names="var_x").melt(id_vars="var_x", var_name="var_y", value_name="rho")
+    longo["rotulo"] = longo["rho"].map(lambda r: "—" if pd.isna(r) else f"{r:.2f}")
+    return longo
+
+
+# Sidebar: filtros do Dashboard 1 (variáveis + intervalo)
 with st.sidebar:
     st.header("Filtros", icon=":material/tune:")
-    st.caption("Defina o recorte de filmes analisado nas seções ao lado.")
+    st.caption("Definem o recorte de filmes da aba **Correlação e distribuição**.")
 
     variaveis = st.multiselect(
         "Variáveis quantitativas",
@@ -77,9 +101,8 @@ with st.sidebar:
     intervalos = {}
     for var in variaveis:
         minimo, maximo, passo = limites_slider(df[var] / ESCALA.get(var, 1))
-        unidade = " (US$ mi)" if var in ESCALA else ""
         intervalos[var] = st.slider(
-            f"Intervalo de {var}{unidade}",
+            f"Intervalo de {rotulo_variavel(var)}",
             min_value=minimo,
             max_value=maximo,
             value=(minimo, maximo),
@@ -89,7 +112,7 @@ with st.sidebar:
         )
 
 # Mantém só os filmes dentro de todos os intervalos escolhidos.
-# Filmes sem valor (runtime ausente) só saem quando o intervalo daquela variável é estreitado.
+# Filmes sem valor (runtime, budget ou revenue ausente) só saem quando o intervalo daquela variável é estreitado.
 df_filtrado = df
 for var, (inicio, fim) in intervalos.items():
     valores = df_filtrado[var] / ESCALA.get(var, 1)
@@ -103,92 +126,274 @@ for var, (inicio, fim) in intervalos.items():
 with st.container(key="hero", gap="small"):
     st.badge("TMDB Analytics", icon=":material/movie:", color="primary")
     st.title("CineInsights")
-    st.markdown("Correlação e distribuição das variáveis quantitativas do **TMDB 5000 Movies**.")
+    st.markdown("Correlação, distribuição e retorno financeiro dos filmes do **TMDB 5000 Movies**.")
 
 st.space("small")
 
-# Contexto do recorte atual
-col_filmes, col_variaveis, col_metodo = st.columns(3, gap="medium")
-with col_filmes:
-    st.metric(
-        "Filmes no recorte",
-        formatar_inteiro(len(df_filtrado)),
-        help=f"De {formatar_inteiro(len(df))} filmes com pelo menos um voto, após o tratamento da EDA.",
-        icon=":material/movie_filter:",
-        border=True,
+aba_d1, aba_d2 = st.tabs(
+    [":material/grid_on: Correlação e distribuição", ":material/payments: Retorno do investimento"]
+)
+
+# Dashboard 1: correlação e distribuição
+with aba_d1:
+    # Contexto do recorte atual
+    col_filmes, col_variaveis, col_metodo = st.columns(3, gap="medium")
+    with col_filmes:
+        st.metric(
+            "Filmes no recorte",
+            formatar_inteiro(len(df_filtrado)),
+            help=f"De {formatar_inteiro(len(df))} filmes com pelo menos um voto, após o tratamento da EDA.",
+            icon=":material/movie_filter:",
+            border=True,
+        )
+    with col_variaveis:
+        st.metric(
+            "Variáveis ativas",
+            f"{len(variaveis)} de {len(VARS_QUANT)}",
+            icon=":material/tune:",
+            border=True,
+        )
+    with col_metodo:
+        st.metric(
+            "Método de correlação",
+            "Spearman",
+            help="Nenhuma variável passou no Shapiro-Wilk na EDA, por isso a correlação é de postos (Spearman).",
+            icon=":material/functions:",
+            border=True,
+        )
+
+    # Correlação (heatmap) à esquerda, distribuição (histograma) à direita
+    col_correlacao, col_distribuicao = st.columns([1, 1.5], gap="medium")
+
+    with col_correlacao:
+        with st.container(border=True, height="stretch"):
+            st.subheader("Correlação", icon=":material/grid_on:")
+            st.caption("Força da relação monotônica entre as variáveis selecionadas.")
+
+            if len(variaveis) < 2:
+                st.warning("Selecione pelo menos 2 variáveis para calcular a correlação.", icon=":material/warning:")
+            elif len(df_filtrado) < 3:
+                st.warning("Poucos filmes dentro dos intervalos para calcular a correlação.", icon=":material/warning:")
+            else:
+                corr = matriz_spearman(df_filtrado[variaveis])
+                base = alt.Chart(corr).encode(
+                    x=alt.X("var_x:N", sort=variaveis, title=None, axis=alt.Axis(labelAngle=-35, labelOverlap=False)),
+                    y=alt.Y("var_y:N", sort=variaveis, title=None, axis=alt.Axis(labelLimit=200)),
+                )
+                celulas = base.mark_rect(cornerRadius=4, stroke=NEUTRO, strokeWidth=2).encode(
+                    color=alt.Color(
+                        "rho:Q",
+                        title="ρ",
+                        scale=alt.Scale(domain=[-1, 0, 1], range=[AZUL, NEUTRO, CORAL]),
+                        legend=alt.Legend(orient="bottom", direction="horizontal", gradientLength=220),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("var_x:N", title="Variável"),
+                        alt.Tooltip("var_y:N", title="Variável"),
+                        alt.Tooltip("rotulo:N", title="ρ de Spearman"),
+                    ],
+                )
+                # Texto branco nas células escuras (|ρ| alto), cor do tema nas claras
+                textos = base.mark_text(fontSize=13, fontWeight=500).encode(
+                    text="rotulo:N",
+                    color=alt.condition("abs(datum.rho) > 0.6", alt.value("white"), alt.value(TEXTO)),
+                )
+                st.altair_chart(
+                    (celulas + textos).properties(height=380),
+                    alt="Heatmap da correlação de Spearman entre as variáveis selecionadas",
+                )
+                if corr["rho"].isna().any():
+                    st.caption("— : variável sem variação no recorte, correlação indefinida.")
+
+    with col_distribuicao:
+        with st.container(border=True, height="stretch"):
+            st.subheader("Distribuição", icon=":material/bar_chart:")
+            st.caption("Como os valores de uma variável se espalham entre os filmes do recorte.")
+
+            if not variaveis:
+                st.warning("Selecione pelo menos 1 variável para ver a distribuição.", icon=":material/warning:")
+            else:
+                var_hist = st.selectbox("Variável do histograma", options=variaveis)
+                dados_hist = df_filtrado[[var_hist, "avaliacao"]].dropna()
+                dados_hist[var_hist] = dados_hist[var_hist] / ESCALA.get(var_hist, 1)
+
+                if dados_hist.empty:
+                    st.warning("Nenhum filme com valor dessa variável no recorte.", icon=":material/warning:")
+                else:
+                    if separar_por_classe:
+                        # Classes sobrepostas (sem empilhar) para comparar o formato das duas distribuições
+                        cor = alt.Color("avaliacao:N", title="Classe", scale=CORES_CLASSE, legend=alt.Legend(orient="top"))
+                        barras = alt.Chart(dados_hist).mark_bar(opacity=0.6, binSpacing=1).encode(color=cor)
+                    else:
+                        barras = alt.Chart(dados_hist).mark_bar(color=CORAL, binSpacing=1)
+
+                    histograma = barras.encode(
+                        x=alt.X(f"{var_hist}:Q", bin=alt.Bin(maxbins=40), title=rotulo_variavel(var_hist)),
+                        y=alt.Y("count():Q", title="Filmes", stack=None),
+                        tooltip=[
+                            alt.Tooltip(f"{var_hist}:Q", bin=alt.Bin(maxbins=40), title=rotulo_variavel(var_hist)),
+                            alt.Tooltip("count():Q", title="Filmes"),
+                        ],
+                    ).properties(height=380)
+                    st.altair_chart(histograma, alt=f"Histograma de {var_hist}")
+
+                    fora = len(df_filtrado) - len(dados_hist)
+                    if fora:
+                        st.caption(f"{formatar_inteiro(fora)} filmes do recorte sem {var_hist} informado ficam de fora.")
+
+    st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Tratamento: notebooks/eda.ipynb")
+
+
+# Dashboard 2: KPIs de retorno do investimento (público: produtora/investidor)
+METRICAS_D2 = {
+    "Receita mediana": "receita",
+    "ROI mediano": "roi",
+    "% que se pagou": "pagou",
+    "Nota mediana": "nota",
+}
+
+
+@st.cache_data(max_entries=50)
+def kpis(dados):
+    """KPIs do Dashboard 2. As financeiras só usam filmes com budget e revenue informados."""
+    fin = dados.dropna(subset=["budget", "revenue"])
+    roi = fin["revenue"] / fin["budget"]
+    return {
+        "receita": dados["revenue"].median() / ESCALA["revenue"],
+        "roi": roi.median(),
+        "pagou": (roi > 1).mean() * 100 if len(fin) else float("nan"),
+        "nota": dados["vote_average"].median(),
+        "n_filmes": len(dados),
+        "n_fin": len(fin),
+    }
+
+
+@st.cache_data(max_entries=50)
+def kpis_por_decada(dados):
+    linhas = [{"decada": d, **kpis(grupo)} for d, grupo in dados.groupby("decada")]
+    return pd.DataFrame(linhas)
+
+
+def valor_kpi(chave, valor):
+    """Texto de exibição de cada KPI ('—' quando não há filmes para calcular)."""
+    if pd.isna(valor):
+        return "—"
+    if chave == "receita":
+        return f"US$ {formatar_decimal(valor)} mi"
+    if chave == "roi":
+        return f"{formatar_decimal(valor)}×"
+    if chave == "pagou":
+        return f"{formatar_decimal(valor, 0)}%"
+    return formatar_decimal(valor)
+
+
+with aba_d2:
+    st.caption(
+        "Para quem decide onde investir: quanto os filmes faturam, quanto devolvem do orçamento "
+        "e como isso mudou ao longo das décadas."
     )
-with col_variaveis:
-    st.metric(
-        "Variáveis ativas",
-        f"{len(variaveis)} de {len(VARS_QUANT)}",
-        icon=":material/tune:",
-        border=True,
-    )
-with col_metodo:
-    st.metric(
-        "Método de correlação",
-        "Spearman",
-        help="Nenhuma variável passou no Shapiro-Wilk na EDA, por isso a correlação é de postos (Spearman).",
-        icon=":material/functions:",
-        border=True,
-    )
 
+    # Widgets do Dashboard 2 (ficam na aba, porque a sidebar controla só o Dashboard 1)
+    with st.container(horizontal=True, gap="large", vertical_alignment="bottom"):
+        decadas = st.pills(
+            "Décadas",
+            options=ORDEM_DECADAS,
+            selection_mode="multi",
+            default=ORDEM_DECADAS,
+            key="d2_decadas",
+        )
+        classe_d2 = st.segmented_control(
+            "Classe",
+            options=["Todos", *CLASSES],
+            default="Todos",
+            required=True,
+            key="d2_classe",
+        )
 
-def placeholder(chave, icone, titulo, descricao, altura=360):
-    """Espaço reservado para um gráfico que ainda será implementado."""
-    with st.container(
-        key=f"placeholder_{chave}",
-        height=altura,
-        horizontal_alignment="center",
-        vertical_alignment="center",
-    ):
-        st.markdown(f"## {icone}", text_alignment="center")
-        st.markdown(f"**{titulo}**", text_alignment="center")
-        st.caption(descricao, text_alignment="center")
-        st.badge("Em breve", icon=":material/schedule:", color="primary")
+    df_d2 = df[df["decada"].isin(decadas)]
+    if classe_d2 != "Todos":
+        df_d2 = df_d2[df_d2["avaliacao"] == classe_d2]
 
+    if df_d2.empty:
+        st.warning("Selecione pelo menos 1 década para ver os indicadores.", icon=":material/warning:")
+    else:
+        geral = kpis(df_d2)
+        base_fin = f"Base: {formatar_inteiro(geral['n_fin'])} filmes com orçamento e receita informados."
 
-# Dashboard 1: correlação (heatmap) à esquerda, distribuição (histograma) à direita
-col_correlacao, col_distribuicao = st.columns([1, 1.5], gap="medium")
-
-with col_correlacao:
-    with st.container(border=True, height="stretch"):
-        st.subheader("Correlação", icon=":material/grid_on:")
-        st.caption("Força da relação monotônica entre as variáveis selecionadas.")
-
-        if len(variaveis) < 2:
-            st.warning("Selecione pelo menos 2 variáveis para calcular a correlação.", icon=":material/warning:")
-        elif len(df_filtrado) < 3:
-            st.warning("Poucos filmes dentro dos intervalos para calcular a correlação.", icon=":material/warning:")
-        else:
-            # TODO: matriz de Spearman (df_filtrado[variaveis].corr(method="spearman")) em heatmap
-            placeholder(
-                "correlacao",
-                ":material/grid_on:",
-                "Heatmap de correlação de Spearman",
-                f"{len(variaveis)} variáveis · {formatar_inteiro(len(df_filtrado))} filmes",
-                altura="stretch",  # ocupa a altura que sobra no card (o da direita tem um seletor a mais)
+        col_receita, col_roi, col_pagou, col_nota = st.columns(4, gap="medium")
+        with col_receita:
+            st.metric(
+                "Receita mediana",
+                valor_kpi("receita", geral["receita"]),
+                help="Metade dos filmes do recorte faturou mais do que isso na bilheteria. Considera só receitas informadas.",
+                icon=":material/payments:",
+                border=True,
+            )
+        with col_roi:
+            st.metric(
+                "ROI mediano",
+                valor_kpi("roi", geral["roi"]),
+                help=f"Receita ÷ orçamento do filme típico: 2× = faturou o dobro do que custou. {base_fin}",
+                icon=":material/trending_up:",
+                border=True,
+            )
+        with col_pagou:
+            st.metric(
+                "% que se pagou",
+                valor_kpi("pagou", geral["pagou"]),
+                help=f"Filmes cuja receita superou o orçamento (sem contar marketing e distribuição). {base_fin}",
+                icon=":material/savings:",
+                border=True,
+            )
+        with col_nota:
+            st.metric(
+                "Nota mediana",
+                valor_kpi("nota", geral["nota"]),
+                help="Mediana de vote_average (0 a 10) no recorte: a recepção do público.",
+                icon=":material/star:",
+                border=True,
             )
 
-with col_distribuicao:
-    with st.container(border=True, height="stretch"):
-        st.subheader("Distribuição", icon=":material/bar_chart:")
-        st.caption("Como os valores de uma variável se espalham entre os filmes do recorte.")
-
-        if not variaveis:
-            st.warning("Selecione pelo menos 1 variável para ver a distribuição.", icon=":material/warning:")
-        else:
-            var_hist = st.selectbox("Variável do histograma", options=variaveis)
-            classe = "Bem avaliado × Mal avaliado" if separar_por_classe else "todos os filmes juntos"
-
-            # TODO: histograma de var_hist; se separar_por_classe: color="avaliacao"
-            placeholder(
-                "distribuicao",
-                ":material/bar_chart:",
-                f"Histograma de {var_hist}",
-                f"{classe} · {formatar_inteiro(len(df_filtrado))} filmes",
+        with st.container(border=True):
+            st.subheader("Por década", icon=":material/bar_chart:")
+            nome_metrica = st.segmented_control(
+                "Métrica no gráfico",
+                options=list(METRICAS_D2),
+                default="ROI mediano",
+                required=True,
+                key="d2_metrica",
             )
+            chave = METRICAS_D2[nome_metrica]
 
-st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Tratamento: notebooks/eda.ipynb")
+            por_decada = kpis_por_decada(df_d2).dropna(subset=[chave])
+            por_decada["rotulo"] = por_decada[chave].map(lambda v: valor_kpi(chave, v))
 
-# TODO: Dashboard 2 — KPIs (Aula 22)
+            base = alt.Chart(por_decada).encode(
+                x=alt.X("decada:N", sort=ORDEM_DECADAS, title="Década", axis=alt.Axis(labelAngle=0)),
+                y=alt.Y(f"{chave}:Q", title=nome_metrica),
+            )
+            barras = base.mark_bar(color=CORAL, cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
+                tooltip=[
+                    alt.Tooltip("decada:N", title="Década"),
+                    alt.Tooltip("rotulo:N", title=nome_metrica),
+                    alt.Tooltip("n_filmes:Q", title="Filmes"),
+                    alt.Tooltip("n_fin:Q", title="Com orçamento e receita"),
+                ]
+            )
+            # Rótulos dentro do topo da barra, para não brigar com a linha de referência
+            rotulos = base.mark_text(baseline="top", dy=8, color="white", fontSize=13, fontWeight=600).encode(
+                text="rotulo:N"
+            )
+            # Linha tracejada: valor do recorte inteiro, para comparar cada década com o todo
+            referencia = (
+                alt.Chart(pd.DataFrame({"valor": [geral[chave]]}))
+                .mark_rule(color=AZUL, strokeDash=[6, 4], strokeWidth=2)
+                .encode(y="valor:Q")
+            )
+            st.altair_chart(
+                (barras + rotulos + referencia).properties(height=360),
+                alt=f"Gráfico de barras de {nome_metrica} por década",
+            )
+            st.caption(f"Linha tracejada: {nome_metrica.lower()} do recorte inteiro ({valor_kpi(chave, geral[chave])}).")
+
+    st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Valores nominais, sem correção pela inflação.")
