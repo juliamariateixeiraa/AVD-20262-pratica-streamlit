@@ -10,9 +10,6 @@
 
 Os trechos de código feitos com apoio de IA estão marcados no próprio código com `# [IA] <ferramenta> – <finalidade>` em `app.py`, `src/data_loader.py`, `tests/test_app.py` e `.streamlit/config.toml`. Cada marcação indica se o trecho é da Aula 21 ou da Aula 22.
 
-## Prompt usado
-
-<!-- Não incluído. -->
 
 ## Aula 21
 
@@ -33,7 +30,7 @@ Usos, dentro do que é permitido:
 ## O que foi aceito, modificado ou rejeitado e por quê
 
 - **Aceito:**
-  - A IA apresentou opções, cada uma com uma recomendação, e a decisão final foi minha em cada ponto. Escolhi:
+  - Em cada decisão, a IA apresentou as opções e indicou qual recomendava. **Quem escolheu fui eu.** Não aceitei as recomendações de imediato: fiz perguntas para entender por que a IA recomendava uma opção e não a outra (vantagens, desvantagens e impacto nos testes e na leitura do dashboard). Só depois de entender os motivos e concordar com eles decidi. Escolhi:
     - manter a identidade visual da Aula 21;
     - usar Altair no Dashboard 1 (preferido no roteiro e obrigatório no Dashboard 2, para manter consistência);
     - heatmap de Spearman + histograma no Dashboard 1, seguindo o rascunho da Aula 21;
