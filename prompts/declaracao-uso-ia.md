@@ -1,6 +1,6 @@
 # Declaração de Uso de IA
 
-**Nome:**
+**Nome:** Julia Maria Santos Teixeira
 **Data:** 30/10/2026 (Aula 22)
 
 ## Ferramenta
@@ -25,6 +25,7 @@ Usos, dentro do que é permitido:
 - **Cálculo das métricas** do Dashboard 2 (receita mediana, ROI mediano, % que se pagou, nota mediana) e redação da `entregas/justificativa-metricas.md`.
 - **Testes de borda** do Dashboard 1 e do Dashboard 2 (`tests/test_app.py`, 38 casos: 0, 1 e 2+ variáveis e combinações de widgets).
 - **Rascunho do Dashboard 2:** wireframe gerado em `entregas/rascunho-dashboard2.jpg`.
+- **Rascunho do Dashboard 1:** wireframe gerado em `entregas/rascunho-dashboard1.jpg`. Ele estava pendente desde a Aula 21 e foi feito na Aula 22, depois da implementação, a partir do layout já combinado (o rascunho da professora + o esqueleto da Aula 21).
 - **Depuração:** investigação de números divergentes no app (a causa era um servidor Streamlit antigo, ainda rodando com dados velhos em cache).
 
 ## O que foi aceito, modificado ou rejeitado e por quê
