@@ -34,7 +34,12 @@ Usos, dentro do que é permitido:
 ## O que foi aceito, modificado ou rejeitado e por quê
 
 - **Aceito:**
-  - Em cada decisão, a IA apresentou as opções e indicou qual recomendava. **Quem escolheu fui eu.** Não aceitei as recomendações de imediato: em outra conversa com a IA, fiz perguntas para entender por que a IA recomendava uma opção e não a outra (vantagens, desvantagens e impacto nos testes e na leitura do dashboard). Só depois de entender os motivos e concordar com eles decidi. Escolhi:
+  - **As decisões, incluindo a escolha das métricas, foram minhas, tomadas a partir de um debate com a IA.** Em outra conversa, eu levei as minhas próprias opções e discuti com a IA:
+    - o que ela achava da minha opção e se fazia sentido;
+    - por que ela recomendava outra opção e não a minha;
+    - as vantagens e desvantagens de cada uma, e o impacto nos testes e na leitura do dashboard.
+
+    Em alguns pontos acabei indo com a opção que a IA recomendava, mas só depois de entender os motivos e concordar com eles. Não aceitei recomendações sem questionar. Escolhi:
     - manter a identidade visual da Aula 21;
     - usar Altair no Dashboard 1 (preferido no roteiro e obrigatório no Dashboard 2, para manter consistência);
     - heatmap de Spearman + histograma no Dashboard 1, seguindo o rascunho da Aula 21;
