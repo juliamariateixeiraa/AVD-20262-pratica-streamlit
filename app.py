@@ -12,6 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
+# [IA] Claude Code + Skill oficial do Streamlit – identidade visual: CSS do cabeçalho (Aula 21)
 # Refinamento pontual: só a classe gerada por key= (estável), sem classes internas do Streamlit
 st.html(
     """
@@ -31,15 +32,18 @@ st.html(
 
 df = load_data()
 
+# [IA] Claude Code + Skill oficial do Streamlit – esqueleto do app a partir do rascunho (Aula 21)
 # Variáveis quantitativas do estudo (mesma lista VARS_QUANT do notebook de EDA)
 VARS_QUANT = ["budget", "revenue", "popularity", "runtime", "vote_average", "vote_count"]
 
 # budget e revenue chegam a bilhões: sliders e gráficos mostram em US$ milhões para ficarem legíveis
 ESCALA = {"budget": 1_000_000, "revenue": 1_000_000}
 
+# [IA] Claude Code + Skill oficial do Streamlit – constantes de classe e ordem das décadas (Aula 22)
 CLASSES = ["Bem avaliado", "Mal avaliado"]
 ORDEM_DECADAS = ["pre-1970", "1970s", "1980s", "1990s", "2000s", "2010s"]
 
+# [IA] Claude Code + Skill oficial do Streamlit – identidade visual: cores dos gráficos alinhadas ao tema (Aula 22)
 # Mesmas cores do .streamlit/config.toml, para os gráficos acompanharem o tema claro/escuro
 TEMA_ESCURO = st.context.theme.type == "dark"
 CORAL = "#F2545B" if TEMA_ESCURO else "#E5484D"  # Bem avaliado / destaque
@@ -49,6 +53,7 @@ TEXTO = "#E9ECF5" if TEMA_ESCURO else "#0B1020"
 CORES_CLASSE = alt.Scale(domain=CLASSES, range=[CORAL, AZUL])
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – esqueleto: limites dos sliders e formatação (Aula 21)
 def limites_slider(serie):
     """Mínimo, máximo e passo do slider de intervalo de uma variável."""
     # runtime é inteiro, mas vem como float por causa dos NaN (runtime == 0 tratado na EDA)
@@ -61,6 +66,7 @@ def formatar_inteiro(n):
     return f"{n:,}".replace(",", ".")
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – formatação de números e rótulos (Aula 22)
 def formatar_decimal(x, casas=1):
     return f"{x:,.{casas}f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
@@ -69,6 +75,7 @@ def rotulo_variavel(var):
     return f"{var} (US$ mi)" if var in ESCALA else var
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – cálculo da matriz de Spearman em formato longo para o Altair (Aula 22)
 @st.cache_data(max_entries=50)
 def matriz_spearman(dados):
     """Correlação de Spearman em formato longo (uma linha por par), pronta para o heatmap."""
@@ -79,6 +86,7 @@ def matriz_spearman(dados):
     return longo
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – esqueleto: sidebar com seletor de variáveis, toggle e sliders (Aula 21)
 # Sidebar: filtros do Dashboard 1 (variáveis + intervalo)
 with st.sidebar:
     st.header("Filtros", icon=":material/tune:")
@@ -111,6 +119,7 @@ with st.sidebar:
             key=f"intervalo_{var}",
         )
 
+# [IA] Claude Code + Skill oficial do Streamlit – esqueleto: aplicação dos filtros de intervalo (Aula 21)
 # Mantém só os filmes dentro de todos os intervalos escolhidos.
 # Filmes sem valor (runtime, budget ou revenue ausente) só saem quando o intervalo daquela variável é estreitado.
 df_filtrado = df
@@ -122,6 +131,7 @@ for var, (inicio, fim) in intervalos.items():
         dentro |= valores.isna()
     df_filtrado = df_filtrado[dentro]
 
+# [IA] Claude Code + Skill oficial do Streamlit – esqueleto: cabeçalho (Aula 21)
 # Cabeçalho
 with st.container(key="hero", gap="small"):
     st.badge("TMDB Analytics", icon=":material/movie:", color="primary")
@@ -130,12 +140,14 @@ with st.container(key="hero", gap="small"):
 
 st.space("small")
 
+# [IA] Claude Code + Skill oficial do Streamlit – abas separando os dois dashboards (Aula 22)
 aba_d1, aba_d2 = st.tabs(
     [":material/grid_on: Correlação e distribuição", ":material/payments: Retorno do investimento"]
 )
 
 # Dashboard 1: correlação e distribuição
 with aba_d1:
+    # [IA] Claude Code + Skill oficial do Streamlit – esqueleto: métricas de contexto do recorte (Aula 21)
     # Contexto do recorte atual
     col_filmes, col_variaveis, col_metodo = st.columns(3, gap="medium")
     with col_filmes:
@@ -175,6 +187,7 @@ with aba_d1:
             elif len(df_filtrado) < 3:
                 st.warning("Poucos filmes dentro dos intervalos para calcular a correlação.", icon=":material/warning:")
             else:
+                # [IA] Claude Code + Skill oficial do Streamlit – sintaxe Altair do heatmap de correlação (Aula 22)
                 corr = matriz_spearman(df_filtrado[variaveis])
                 base = alt.Chart(corr).encode(
                     x=alt.X("var_x:N", sort=variaveis, title=None, axis=alt.Axis(labelAngle=-35, labelOverlap=False)),
@@ -213,6 +226,7 @@ with aba_d1:
             if not variaveis:
                 st.warning("Selecione pelo menos 1 variável para ver a distribuição.", icon=":material/warning:")
             else:
+                # [IA] Claude Code + Skill oficial do Streamlit – sintaxe Altair do histograma e tratamento de casos de borda (Aula 22)
                 var_hist = st.selectbox("Variável do histograma", options=variaveis)
                 dados_hist = df_filtrado[[var_hist, "avaliacao"]].dropna()
                 dados_hist[var_hist] = dados_hist[var_hist] / ESCALA.get(var_hist, 1)
@@ -244,6 +258,7 @@ with aba_d1:
     st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Tratamento: notebooks/eda.ipynb")
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – cálculo das métricas do Dashboard 2 (Aula 22)
 # Dashboard 2: KPIs de retorno do investimento (público: produtora/investidor)
 METRICAS_D2 = {
     "Receita mediana": "receita",
@@ -293,6 +308,7 @@ with aba_d2:
         "e como isso mudou ao longo das décadas."
     )
 
+    # [IA] Claude Code + Skill oficial do Streamlit – layout dos widgets e st.metric do Dashboard 2 (Aula 22)
     # Widgets do Dashboard 2 (ficam na aba, porque a sidebar controla só o Dashboard 1)
     with st.container(horizontal=True, gap="large", vertical_alignment="bottom"):
         decadas = st.pills(
@@ -356,6 +372,7 @@ with aba_d2:
 
         with st.container(border=True):
             st.subheader("Por década", icon=":material/bar_chart:")
+            # [IA] Claude Code + Skill oficial do Streamlit – sintaxe Altair do gráfico de barras por década (Aula 22)
             nome_metrica = st.segmented_control(
                 "Métrica no gráfico",
                 options=list(METRICAS_D2),

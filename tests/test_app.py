@@ -1,5 +1,6 @@
 """Testes de borda do app (rodar da raiz do projeto: pytest tests/)."""
 
+# [IA] Claude Code + Skill oficial do Streamlit – testes de borda com AppTest: 0, 1, 2+ variáveis e combinações de widgets (Aula 22)
 import pytest
 from streamlit.testing.v1 import AppTest
 
