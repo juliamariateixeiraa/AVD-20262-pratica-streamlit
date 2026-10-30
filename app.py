@@ -255,7 +255,7 @@ with aba_d1:
                     if fora:
                         st.caption(f"{formatar_inteiro(fora)} filmes do recorte sem {var_hist} informado ficam de fora.")
 
-    st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Tratamento: notebooks/eda.ipynb")
+    st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Tratamento: notebooks/eda-com-downloads.ipynb")
 
 
 # [IA] Claude Code + Skill oficial do Streamlit – cálculo das métricas do Dashboard 2 (Aula 22)
