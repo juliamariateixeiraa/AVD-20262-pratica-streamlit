@@ -23,7 +23,7 @@
 - **O que mede:** quantas vezes o filme típico faturou o próprio orçamento. 1× = empatou, 2× = faturou o dobro do que custou.
 - **Por que foi escolhida:** receita alta sozinha não diz se o investimento valeu a pena, porque um filme de US$ 300 mi que fatura US$ 400 mi rende menos que um de US$ 10 mi que fatura US$ 50 mi. O ROI coloca filmes de portes diferentes na mesma régua. É a métrica central do dashboard e por isso é a métrica padrão do gráfico de barras.
 - **Público-alvo:** investidores e produtoras.
-- **Qual decisão pode ser apoiada por essa métrica?** Comparar a eficiência do investimento entre recortes. Ex.: filmes bem avaliados têm ROI mediano de 2,95×, contra 1,72× dos mal avaliados, o que sugere que investir em qualidade dá retorno.
+- **Qual decisão pode ser apoiada por essa métrica?** Comparar a eficiência do investimento entre recortes. Ex.: filmes bem avaliados têm ROI mediano de 2,95×, contra 1,72× dos mal avaliados. <!-- Julia: escreva aqui a sua leitura dessa diferença. -->
 - **O que comunica ao público-alvo:** "o filme típico devolveu 2,3 vezes o que custou". Leitura imediata, sem precisar conhecer as escalas de `budget` e `revenue`.
 
 ## Métrica 3: % que se pagou
@@ -56,4 +56,4 @@ A variável agrupada é `decada`: 6 grupos com ordem natural, o que deixa a evol
 
 ## Limitações que o público deve conhecer
 - **Valores nominais:** os valores não foram corrigidos pela inflação. Comparar receita entre décadas mostra tendência, não poder de compra.
-- **Viés de sobrevivência:** as décadas antigas têm poucos filmes no dataset (143 antes de 1970, 109 nos anos 1970) e são em geral clássicos que "sobreviveram". Isso infla o ROI e a nota dessas décadas (ROI mediano de 7,9× nos 1970s). O tooltip das barras mostra quantos filmes há em cada década.
+- **Poucos filmes nas décadas antigas:** há 143 filmes antes de 1970 e 109 nos anos 1970, contra 2.034 nos 2000s. As métricas dessas décadas são calculadas sobre amostras pequenas. O tooltip das barras mostra quantos filmes há em cada década. <!-- Julia: se quiser, escreva aqui a sua leitura de por que essas décadas aparecem com ROI e nota mais altos. -->

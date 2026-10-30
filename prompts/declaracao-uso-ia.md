@@ -26,12 +26,15 @@ Usos, dentro do que é permitido:
 - **Testes de borda** do Dashboard 1 e do Dashboard 2 (`tests/test_app.py`, 38 casos: 0, 1 e 2+ variáveis e combinações de widgets).
 - **Rascunho do Dashboard 2:** wireframe gerado em `entregas/rascunho-dashboard2.jpg`.
 - **Rascunho do Dashboard 1:** wireframe gerado em `entregas/rascunho-dashboard1.jpg`. Ele estava pendente desde a Aula 21 e foi feito na Aula 22, depois da implementação, a partir do layout já combinado (o rascunho da professora + o esqueleto da Aula 21).
+- **Organização do repositório:** os notebooks foram renomeados para os papéis que o roteiro pede (`eda.ipynb` = EDA original, `eda-com-downloads.ipynb` = com download e exportação), e o notebook da professora foi recuperado em `arquivo-eda-original.ipynb`.
+- **Template de prompt da Aula 21:** `prompts/layout-skeleton-prompt.md` foi reconstruído com apoio de IA, porque o prompt original não foi salvo. O arquivo tem uma nota dizendo isso.
+- **Justificativa das métricas:** a IA ajudou a calcular as métricas e a redigir o texto. As frases de interpretação dos resultados foram retiradas do texto da IA e são minhas.
 - **Depuração:** investigação de números divergentes no app (a causa era um servidor Streamlit antigo, ainda rodando com dados velhos em cache).
 
 ## O que foi aceito, modificado ou rejeitado e por quê
 
 - **Aceito:**
-  - Em cada decisão, a IA apresentou as opções e indicou qual recomendava. **Quem escolheu fui eu.** Não aceitei as recomendações de imediato: fiz perguntas para entender por que a IA recomendava uma opção e não a outra (vantagens, desvantagens e impacto nos testes e na leitura do dashboard). Só depois de entender os motivos e concordar com eles decidi. Escolhi:
+  - Em cada decisão, a IA apresentou as opções e indicou qual recomendava. **Quem escolheu fui eu.** Não aceitei as recomendações de imediato: em outra conversa com a IA, fiz perguntas para entender por que a IA recomendava uma opção e não a outra (vantagens, desvantagens e impacto nos testes e na leitura do dashboard). Só depois de entender os motivos e concordar com eles decidi. Escolhi:
     - manter a identidade visual da Aula 21;
     - usar Altair no Dashboard 1 (preferido no roteiro e obrigatório no Dashboard 2, para manter consistência);
     - heatmap de Spearman + histograma no Dashboard 1, seguindo o rascunho da Aula 21;
