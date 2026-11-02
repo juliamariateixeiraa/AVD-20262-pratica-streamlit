@@ -4,7 +4,7 @@ App em Streamlit com dois dashboards construídos a partir da minha EDA do **TMD
 
 **Autora:** Julia Maria Santos Teixeira
 
-**Link do app (Aula 23):** _(preencher após o deploy)_
+**Link do app (Aula 23):** https://cineinsights-julia.streamlit.app/
 
 ## Sobre o app
 
