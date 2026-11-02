@@ -51,8 +51,23 @@
 
 Os widgets do Dashboard 2 ficam dentro da aba. A sidebar controla só o Dashboard 1, para que os sliders de intervalo do Dashboard 1 não alterem os KPIs sem o usuário perceber.
 
-## Visual: barras por década
+## Visuais
+
+Os três visuais respondem aos mesmos widgets (décadas e classe) que as métricas.
+
+### 1. Barras por década
 A variável agrupada é `decada`: 6 grupos com ordem natural, o que deixa a evolução no tempo fácil de ler. Cada barra mostra a métrica escolhida naquela década, com o valor escrito na barra. A **linha tracejada** marca o valor do recorte inteiro, para comparar cada década com o todo.
+
+### 2. Dispersão orçamento × receita
+- **Variáveis:** `budget` (eixo X) e `revenue` (eixo Y), em US$ milhões, com cor pela classe `avaliacao`.
+- **O que mostra:** cada ponto é um filme. A **linha tracejada** é onde a receita é igual ao orçamento (ROI = 1×): pontos acima dela se pagaram, pontos abaixo não. É a métrica "% que se pagou" vista filme a filme.
+- **Por que escala log:** orçamento e receita vão de milhares a bilhões de dólares. Em escala linear, quase todos os filmes ficariam espremidos num canto.
+- **Base:** só filmes com orçamento e receita informados. O tooltip mostra título, ano, valores e ROI.
+
+### 3. Linha de receita e orçamento no tempo
+- **Variáveis:** `revenue` e `budget` (medianas, em US$ milhões) por `release_date`.
+- **O que mostra:** a receita mediana e o orçamento mediano lado a lado ao longo do tempo, no mesmo eixo, para comparar as duas séries.
+- **Por que lustros (5 anos) e não anos:** antes de 1970 muitos anos têm 1 a 3 filmes, e um filme sozinho virava a mediana do ano, o que gerava picos sem significado. Agrupando a cada 5 anos, cada ponto tem mais filmes. O tooltip mostra quantos.
 
 ## Limitações que o público deve conhecer
 - **Valores nominais:** os valores não foram corrigidos pela inflação. Comparar receita entre décadas mostra tendência, não poder de compra.

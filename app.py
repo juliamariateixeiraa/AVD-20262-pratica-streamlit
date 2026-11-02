@@ -50,6 +50,7 @@ CORAL = "#F2545B" if TEMA_ESCURO else "#E5484D"  # Bem avaliado / destaque
 AZUL = "#6A93DE" if TEMA_ESCURO else "#4F79C4"  # Mal avaliado
 NEUTRO = "#1B2238" if TEMA_ESCURO else "#EEF0F6"  # centro da escala divergente (ρ = 0)
 TEXTO = "#E9ECF5" if TEMA_ESCURO else "#0B1020"
+CINZA = "#9AA3B8" if TEMA_ESCURO else "#8B93A7"  # séries secundárias (orçamento na linha do tempo)
 CORES_CLASSE = alt.Scale(domain=CLASSES, range=[CORAL, AZUL])
 
 
@@ -289,6 +290,42 @@ def kpis_por_decada(dados):
     return pd.DataFrame(linhas)
 
 
+# [IA] Claude Code + Skill oficial do Streamlit – preparação dos dados da dispersão e da linha do tempo (Aula 23)
+@st.cache_data(max_entries=50)
+def filmes_com_roi(dados):
+    """Um filme por linha, só os que têm orçamento e receita informados, em US$ mi."""
+    fin = dados.dropna(subset=["budget", "revenue"])
+    return pd.DataFrame(
+        {
+            "title": fin["title"],
+            "ano": pd.to_datetime(fin["release_date"]).dt.year,
+            "avaliacao": fin["avaliacao"],
+            "budget": fin["budget"] / ESCALA["budget"],
+            "revenue": fin["revenue"] / ESCALA["revenue"],
+            "roi": fin["revenue"] / fin["budget"],
+        }
+    )
+
+
+@st.cache_data(max_entries=50)
+def medianas_por_lustro(dados):
+    """Mediana de receita e de orçamento a cada 5 anos de lançamento, em formato longo (uma linha por lustro e série)."""
+    # Lustros em vez de anos: antes de 1970 muitos anos têm 1 a 3 filmes, e um filme sozinho virava a mediana
+    lustro = pd.to_datetime(dados["release_date"]).dt.year // 5 * 5
+    por_lustro = dados.groupby(lustro).agg(
+        receita=("revenue", "median"),
+        orcamento=("budget", "median"),
+        filmes=("id", "size"),
+    )
+    por_lustro = por_lustro.rename(columns={"receita": "Receita mediana", "orcamento": "Orçamento mediano"})
+    longo = por_lustro.reset_index(names="lustro").melt(
+        id_vars=["lustro", "filmes"], var_name="serie", value_name="valor"
+    )
+    longo["periodo"] = longo["lustro"].map(lambda a: f"{a}–{a + 4}")
+    longo["valor"] = longo["valor"] / ESCALA["revenue"]
+    return longo.dropna(subset=["valor"])
+
+
 def valor_kpi(chave, valor):
     """Texto de exibição de cada KPI ('—' quando não há filmes para calcular)."""
     if pd.isna(valor):
@@ -412,5 +449,85 @@ with aba_d2:
                 alt=f"Gráfico de barras de {nome_metrica} por década",
             )
             st.caption(f"Linha tracejada: {nome_metrica.lower()} do recorte inteiro ({valor_kpi(chave, geral[chave])}).")
+
+        col_dispersao, col_tempo = st.columns(2, gap="medium")
+
+        with col_dispersao:
+            with st.container(border=True, height="stretch"):
+                st.subheader("Orçamento × receita", icon=":material/scatter_plot:")
+                st.caption("Um ponto por filme. Acima da linha tracejada, a receita superou o orçamento.")
+
+                # [IA] Claude Code + Skill oficial do Streamlit – sintaxe Altair da dispersão orçamento × receita (Aula 23)
+                filmes = filmes_com_roi(df_d2)
+                if filmes.empty:
+                    st.warning("Nenhum filme com orçamento e receita informados no recorte.", icon=":material/warning:")
+                else:
+                    escala_log = alt.Scale(type="log")
+                    # Só potências de 10 no eixo: na escala log o padrão desenha uma grade densa demais
+                    eixo_log = alt.Axis(values=[0.01, 0.1, 1, 10, 100, 1000], format="~g", gridOpacity=0.5)
+                    pontos = (
+                        alt.Chart(filmes)
+                        .mark_circle(size=28, opacity=0.55)
+                        .encode(
+                            x=alt.X("budget:Q", title="Orçamento (US$ mi, escala log)", scale=escala_log, axis=eixo_log),
+                            y=alt.Y("revenue:Q", title="Receita (US$ mi, escala log)", scale=escala_log, axis=eixo_log),
+                            color=alt.Color("avaliacao:N", title="Classe", scale=CORES_CLASSE, legend=alt.Legend(orient="top")),
+                            tooltip=[
+                                alt.Tooltip("title:N", title="Filme"),
+                                alt.Tooltip("ano:Q", title="Ano"),
+                                alt.Tooltip("budget:Q", title="Orçamento (US$ mi)", format=",.1f"),
+                                alt.Tooltip("revenue:Q", title="Receita (US$ mi)", format=",.1f"),
+                                alt.Tooltip("roi:Q", title="ROI (×)", format=".2f"),
+                            ],
+                        )
+                    )
+                    # Linha receita = orçamento (ROI = 1×), do menor ao maior valor do recorte
+                    extremos = [filmes[["budget", "revenue"]].min().min(), filmes[["budget", "revenue"]].max().max()]
+                    empate = (
+                        alt.Chart(pd.DataFrame({"budget": extremos, "revenue": extremos}))
+                        .mark_line(color=TEXTO, strokeDash=[6, 4], strokeWidth=1.5, opacity=0.7)
+                        .encode(x="budget:Q", y="revenue:Q")
+                    )
+                    st.altair_chart(
+                        (pontos + empate).properties(height=380),
+                        alt="Gráfico de dispersão do orçamento contra a receita de cada filme, em escala log",
+                    )
+                    st.caption(f"{formatar_inteiro(len(filmes))} filmes com orçamento e receita informados.")
+
+        with col_tempo:
+            with st.container(border=True, height="stretch"):
+                st.subheader("Receita e orçamento no tempo", icon=":material/show_chart:")
+                st.caption("Mediana a cada 5 anos de lançamento, em US$ milhões (valores nominais).")
+
+                # [IA] Claude Code + Skill oficial do Streamlit – sintaxe Altair da linha de receita e orçamento por lustro (Aula 23)
+                por_lustro = medianas_por_lustro(df_d2)
+                if por_lustro.empty:
+                    st.warning("Nenhum filme com orçamento ou receita informados no recorte.", icon=":material/warning:")
+                else:
+                    linhas = (
+                        alt.Chart(por_lustro)
+                        .mark_line(point=alt.OverlayMarkDef(size=40), strokeWidth=2.5)
+                        .encode(
+                            x=alt.X("lustro:Q", title="Início do lustro", axis=alt.Axis(format="d", tickMinStep=5)),
+                            y=alt.Y("valor:Q", title="US$ mi"),
+                            color=alt.Color(
+                                "serie:N",
+                                title=None,
+                                scale=alt.Scale(domain=["Receita mediana", "Orçamento mediano"], range=[CORAL, CINZA]),
+                                legend=alt.Legend(orient="top"),
+                            ),
+                            tooltip=[
+                                alt.Tooltip("periodo:N", title="Período"),
+                                alt.Tooltip("serie:N", title="Série"),
+                                alt.Tooltip("valor:Q", title="US$ mi", format=",.1f"),
+                                alt.Tooltip("filmes:Q", title="Filmes no período"),
+                            ],
+                        )
+                    )
+                    st.altair_chart(
+                        linhas.properties(height=380),
+                        alt="Gráfico de linhas da receita mediana e do orçamento mediano a cada 5 anos de lançamento",
+                    )
+                    st.caption("Cada ponto agrupa 5 anos (ex.: 1980 = 1980–1984). O tooltip mostra quantos filmes há no período.")
 
     st.caption("Fonte: TMDB 5000 Movie Dataset (Kaggle) · Valores nominais, sem correção pela inflação.")

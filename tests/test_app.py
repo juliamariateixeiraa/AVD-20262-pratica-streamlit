@@ -4,6 +4,9 @@
 import pytest
 from streamlit.testing.v1 import AppTest
 
+# Dashboard 2 tem 3 gráficos: barras por década, dispersão orçamento × receita e linha no tempo
+GRAFICOS_D2 = 3
+
 VARS_QUANT = ["budget", "revenue", "popularity", "runtime", "vote_average", "vote_count"]
 
 
@@ -30,7 +33,7 @@ def metrica(at, rotulo):
 def test_padrao_6_variaveis(at):
     assert not at.exception
     assert not avisos(at)
-    assert len(graficos(at)) == 3  # heatmap + histograma + barras do Dashboard 2
+    assert len(graficos(at)) == 2 + GRAFICOS_D2  # heatmap + histograma + Dashboard 2
     assert metrica(at, "Variáveis ativas") == "6 de 6"
     assert len(at.slider) == 6
 
@@ -41,14 +44,14 @@ def test_0_variaveis(at):
     assert any("pelo menos 2 variáveis" in a for a in avisos(at))
     assert any("pelo menos 1 variável" in a for a in avisos(at))
     assert len(at.slider) == 0
-    assert len(graficos(at)) == 1  # só o Dashboard 2 continua
+    assert len(graficos(at)) == GRAFICOS_D2  # só o Dashboard 2 continua
 
 
 def test_1_variavel(at):
     at.multiselect[0].set_value(["runtime"]).run()
     assert not at.exception
     assert any("pelo menos 2 variáveis" in a for a in avisos(at))
-    assert len(graficos(at)) == 2  # histograma + Dashboard 2
+    assert len(graficos(at)) == 1 + GRAFICOS_D2  # histograma + Dashboard 2
     assert at.selectbox[0].options == ["runtime"]
 
 
@@ -60,7 +63,7 @@ def test_2_ou_mais_variaveis(at, selecao):
     at.multiselect[0].set_value(selecao).run()
     assert not at.exception
     assert not avisos(at)
-    assert len(graficos(at)) == 3
+    assert len(graficos(at)) == 2 + GRAFICOS_D2
     assert len(at.slider) == len(selecao)
 
 
@@ -70,7 +73,7 @@ def test_histograma_cada_variavel_com_e_sem_classe(at, var, separar):
     at.toggle[0].set_value(separar).run()
     at.selectbox[0].set_value(var).run()
     assert not at.exception
-    assert len(graficos(at)) == 3
+    assert len(graficos(at)) == 2 + GRAFICOS_D2
 
 
 def test_intervalo_estreito_recalcula(at):
@@ -121,7 +124,7 @@ def test_dashboard2_metrica_e_classe(at, nome, classe):
     at.segmented_control(key="d2_classe").set_value(classe).run()
     at.segmented_control(key="d2_metrica").set_value(nome).run()
     assert not at.exception
-    assert len(graficos(at)) == 3
+    assert len(graficos(at)) == 2 + GRAFICOS_D2
 
 
 def test_dashboard2_sem_decadas(at):
@@ -141,3 +144,19 @@ def test_dashboard2_independente_da_sidebar(at):
     roi_total = metrica(at, "ROI mediano")
     at.multiselect[0].set_value([]).run()
     assert metrica(at, "ROI mediano") == roi_total
+
+
+def test_dashboard2_sem_decadas_esconde_os_3_graficos(at):
+    at.pills(key="d2_decadas").set_value([]).run()
+    assert len(graficos(at)) == 2  # só o heatmap e o histograma do Dashboard 1
+
+
+@pytest.mark.parametrize("decada", ["pre-1970", "1970s", "2010s"])
+@pytest.mark.parametrize("classe", ["Bem avaliado", "Mal avaliado"])
+def test_dashboard2_decada_unica_por_classe(at, decada, classe):
+    # Recortes pequenos: dispersão e linha do tempo precisam continuar desenhando sem erro
+    at.pills(key="d2_decadas").set_value([decada]).run()
+    at.segmented_control(key="d2_classe").set_value(classe).run()
+    assert not at.exception
+    assert not avisos(at)
+    assert len(graficos(at)) == 2 + GRAFICOS_D2
