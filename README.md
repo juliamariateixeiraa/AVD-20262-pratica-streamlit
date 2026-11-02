@@ -1,11 +1,56 @@
-# AVD-20262-pratica-streamlit
+# CineInsights · TMDB Analytics
 
-Repositório utilizado para aula prática relacionada a Streamlit na disciplina Análise e Visualização de Dados da Cesar School no período de 2026.2.
+App em Streamlit com dois dashboards construídos a partir da minha EDA do **TMDB 5000 Movie Dataset** (Kaggle). Projeto da prática de Streamlit (Aulas 21 a 23) da disciplina Análise e Visualização de Dados, CESAR School, 2026.2.
 
-Repositório-modelo das Aulas 21, 22 e 23: construção de dois dashboards em Streamlit a partir da EDA desenvolvida em sala. O deploy dos dashboards ocorrerá via Streamlit Community Cloud e serão os seguintes:
+**Autora:** Julia Maria Santos Teixeira
 
-- Dashboard 1 = correlação + distribuição das variáveis quantitativas
-- Dashboard 2 = KPIs
+**Link do app (Aula 23):** _(preencher após o deploy)_
+
+## Sobre o app
+
+O app tem duas abas.
+
+### Dashboard 1: Correlação e distribuição
+Um laboratório para explorar as 6 variáveis quantitativas dos filmes: `budget`, `revenue`, `popularity`, `runtime`, `vote_average` e `vote_count`.
+- **Sidebar:** seletor das variáveis, um slider de intervalo para cada variável selecionada e um toggle para separar os filmes por classe (Bem avaliado ou Mal avaliado).
+- **Heatmap de correlação de Spearman** entre as variáveis selecionadas. É Spearman porque nenhuma variável passou no Shapiro-Wilk na EDA.
+- **Histograma** da variável escolhida, com as classes sobrepostas quando o toggle está ligado.
+
+### Dashboard 2: Retorno do investimento
+KPIs para um público de **produtoras e investidores** de cinema, respondendo à pergunta "vale a pena investir em um filme?".
+- **Widgets:** filtro de décadas, filtro de classe e seletor da métrica mostrada no gráfico de barras.
+- **4 métricas:** receita mediana, ROI mediano (receita ÷ orçamento), % de filmes que se pagaram e nota mediana.
+- **3 visuais:** barras da métrica por década, dispersão orçamento × receita (escala log) e linha da receita e do orçamento medianos a cada 5 anos.
+
+A justificativa de cada métrica está em [entregas/justificativa-metricas.md](entregas/justificativa-metricas.md).
+
+## Organização do repositório
+
+| Caminho | Conteúdo |
+| --- | --- |
+| `app.py` | O app (as duas abas) |
+| `src/data_loader.py` | Leitura do dataset tratado, com cache |
+| `data/clean/dataset.csv` | Dataset tratado, exportado pela EDA (4.739 filmes com pelo menos um voto) |
+| `notebooks/eda.ipynb` | Minha EDA original (Aula 11) |
+| `notebooks/eda-com-downloads.ipynb` | A EDA com o download pelo Kaggle e a exportação para `data/clean/` |
+| `notebooks/arquivo-eda-original.ipynb` | Notebook de EDA da professora, mantido para consulta |
+| `entregas/` | Rascunhos dos dois dashboards e justificativa das métricas |
+| `prompts/` | Template de prompt e Declaração de Uso de IA |
+| `tests/test_app.py` | Testes de borda do app com `AppTest` |
+| `.streamlit/config.toml` | Identidade visual (tema claro e escuro) |
+
+## Testes
+
+Os testes simulam o uso do app sem abrir o navegador: 0, 1 e 2 ou mais variáveis selecionadas, intervalos que zeram o recorte, e as combinações de widgets dos dois dashboards. O `pytest` não está no `requirements.txt` porque o deploy não precisa dele. Com o venv ativo, rode na raiz do projeto:
+
+```bash
+python -m pip install pytest
+python -m pytest tests/
+```
+
+## Uso de IA
+
+O uso de IA está declarado em [prompts/declaracao-uso-ia.md](prompts/declaracao-uso-ia.md), e os trechos de código feitos com apoio de IA estão marcados com `# [IA]`.
 
 ## Setup
 
@@ -73,8 +118,6 @@ streamlit run app.py
 ## Passo a passo
 
 O passo a passo detalhado de cada aula (Aulas 21, 22 e 23), com pré-requisitos e objetivos, está em [ROTEIRO.md](ROTEIRO.md). Comece por ele depois do Setup.
-
-**Link do app (Aula 23):** _(preencher após o deploy)_
 
 ## IA neste projeto
 

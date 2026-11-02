@@ -36,6 +36,7 @@ Usos, dentro do que é permitido:
 - **Conferência dos requisitos:** a IA comparou o projeto com a lista de requisitos da atividade e apontou que o Dashboard 2 tinha 1 visual, e o mínimo é 3.
 - **Escolha dos visuais:** a IA listou as opções possíveis com os dados, com prós e contras, **sem recomendar nenhuma**. Escolhi a dispersão orçamento × receita e a linha de receita/orçamento no tempo. Também decidi manter o histograma do Dashboard 1 com o selectbox (um de cada vez) e agrupar a linha do tempo por lustro, para evitar os picos dos anos com poucos filmes.
 - **Sintaxe Altair** dos dois visuais novos, ajustes visuais (grade da escala log e rótulos dos eixos) e novos testes de borda (`tests/test_app.py`, agora com 45 casos).
+- **README:** a IA escreveu as seções que descrevem o projeto (sobre o app, organização do repositório, testes e uso de IA). O resto do README é o modelo da professora.
 - **Rascunho do Dashboard 2** atualizado com os dois visuais novos, e a seção "Visuais" da justificativa descrevendo o que cada gráfico mostra.
 
 ## O que foi aceito, modificado ou rejeitado e por quê
