@@ -1,7 +1,7 @@
 # Declaração de Uso de IA
 
 **Nome:** Julia Maria Santos Teixeira
-**Data:** 30/10/2026 (Aula 22)
+**Datas:** 30/10/2026 (Aula 22) e 02/11/2026 (Aula 23)
 
 ## Ferramenta
 
